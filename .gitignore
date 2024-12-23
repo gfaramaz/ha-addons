@@ -1,2 +1,3 @@
 .aider*
 deploy.settings.ps1
+.env
