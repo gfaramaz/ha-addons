@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.10
+
+- Support half-degree temperature increments in MQTT command parsing (Cloud Script)
+
 ## 2.9
 
 - Update to chibald's latest version (preserving REFRESH_INTERVAL param)) (thanks @20bart - cf. https://github.com/SebLz/ha-addons/pull/65)
