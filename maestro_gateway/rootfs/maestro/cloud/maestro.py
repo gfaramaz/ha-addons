@@ -93,7 +93,7 @@ def on_message_mqtt(client, userdata, message):
     logger.info('Message MQTT reçu : ' + str(message.payload.decode()))
     cmd = message.payload.decode().split(",")
     if cmd[0] == "42":
-        cmd[1] = (int(cmd[1]) * 2)
+        cmd[1] = int(float(cmd[1]) * 2)
     Message_MQTT.empile("C|WriteParametri|" + cmd[0] + "|" + str(cmd[1]))
     logger.info('Contenu Pile Message_MQTT : ' + str(Message_MQTT.copiepile()))
     send()
