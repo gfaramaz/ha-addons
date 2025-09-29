@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.11
+### Added
+- **MQTT Discovery support** for Home Assistant auto-discovery
+  - Automatically creates device and entities in Home Assistant
+  - Supports sensors (temperatures, status, diagnostics)
+  - Supports switches (power, eco mode, silent mode, etc.)
+  - Supports number controls (temperature setpoints, power level)
+  - Configurable device name and ID
+  - Backward compatible - disabled by default
+  - Availability tracking (online/offline status)
+
+### Configuration
+- Added `MQTT_DISCOVERY_ENABLED` (default: false)
+- Added `MQTT_DISCOVERY_PREFIX` (default: "homeassistant")
+- Added `DEVICE_NAME` (default: "MCZ Maestro Stove")
+- Added `DEVICE_ID` (default: "mcz_maestro_stove")
+
 ## 2.10
 
 - Support half-degree temperature increments in MQTT command parsing (Cloud Script)

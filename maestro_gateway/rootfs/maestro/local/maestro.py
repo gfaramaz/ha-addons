@@ -37,6 +37,25 @@ from _config_ import _MQTT_ip
 from _config_ import _VERSION
 from _config_ import _REFRESH_INTERVAL
 
+# Discovery imports
+try:
+    from _config_ import _MQTT_DISCOVERY_ENABLED, _MQTT_DISCOVERY_PREFIX, _DEVICE_NAME, _DEVICE_ID
+    discovery_available = True
+except ImportError:
+    # Backward compatibility - discovery config not available
+    _MQTT_DISCOVERY_ENABLED = False
+    _MQTT_DISCOVERY_PREFIX = 'homeassistant'
+    _DEVICE_NAME = 'MCZ Maestro Stove'
+    _DEVICE_ID = 'mcz_maestro_stove'
+    discovery_available = True
+
+if discovery_available:
+    try:
+        from discovery import DiscoveryManager
+    except ImportError:
+        logger.warning("Discovery module not available")
+        discovery_available = False
+
 from commands import MaestroCommand, get_maestro_command, maestrocommandvalue_to_websocket_string, MaestroCommandValue, MAESTRO_COMMANDS
 
 try:
@@ -75,6 +94,7 @@ websocket_connected = False
 socket_reconnect_count = 0
 client = None
 old_connection_status = None
+discovery_manager = None
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -109,6 +129,11 @@ def on_connect_mqtt(client, userdata, flags, rc):
     else:
         logger.info('MQTT: Subscribed to topic "' + str(_MQTT_TOPIC_SUB) + '"')
         client.subscribe(_MQTT_TOPIC_SUB, qos=1)
+    
+    # Initialize and publish discovery configs
+    global discovery_manager
+    if discovery_available and discovery_manager:
+        discovery_manager.publish_discovery_configs()
 
 def on_disconnect_mqtt(client, userdata, rc):
     if rc != 0:
@@ -198,15 +223,23 @@ def on_error(ws, error):
 
 def on_close(ws, close_status_code, close_msg):
     logger.info('Websocket: Disconnected')
-    global websocket_connected
+    global websocket_connected, discovery_manager
     websocket_connected = False
+    
+    # Publish availability offline for discovery
+    if discovery_available and discovery_manager:
+        discovery_manager.publish_availability_offline()
 
 def on_open(ws):
     logger.info('Websocket: Connected')
     send_connection_status_message({"Status":"connected"})
-    global websocket_connected
+    global websocket_connected, discovery_manager
     websocket_connected = True
     socket_reconnect_count = 0
+    
+    # Publish availability online for discovery
+    if discovery_available and discovery_manager:
+        discovery_manager.publish_availability_online()
     def run(*args):
         for i in range(360*4):
             time.sleep(0.25)
@@ -223,7 +256,7 @@ def on_open(ws):
     thread.start_new_thread(run, ())
 
 def start_mqtt():
-    global client
+    global client, discovery_manager
     logger.info('Connection in progress to the MQTT broker (IP:' +
                 _MQTT_ip + ' PORT:'+str(_MQTT_port)+')')
     client = mqtt.Client(client_id="MCZ_PelletStove")
@@ -235,6 +268,19 @@ def start_mqtt():
     client.on_message = on_message_mqtt
     client.connect(_MQTT_ip, _MQTT_port)
     client.loop_start()
+    
+    # Initialize discovery manager
+    if discovery_available:
+        discovery_config = {
+            '_MQTT_DISCOVERY_ENABLED': _MQTT_DISCOVERY_ENABLED,
+            '_MQTT_DISCOVERY_PREFIX': _MQTT_DISCOVERY_PREFIX,
+            '_DEVICE_NAME': _DEVICE_NAME,
+            '_DEVICE_ID': _DEVICE_ID,
+            '_MQTT_TOPIC_PUB': _MQTT_TOPIC_PUB,
+            '_MQTT_TOPIC_SUB': _MQTT_TOPIC_SUB,
+            '_VERSION': _VERSION
+        }
+        discovery_manager = DiscoveryManager(client, discovery_config)
 
 def publish_availabletopics():  
     logger.info(_MQTT_TOPIC_PUB + 'state')  
@@ -287,6 +333,18 @@ def init_config():
     if (os.getenv('MCZport') != None):
         global _MCZport
         _MCZport = os.getenv('MCZport')
+    
+    # Discovery config
+    if discovery_available:
+        global _MQTT_DISCOVERY_ENABLED, _MQTT_DISCOVERY_PREFIX, _DEVICE_NAME, _DEVICE_ID
+        if (os.getenv('MQTT_DISCOVERY_ENABLED') != None):
+            _MQTT_DISCOVERY_ENABLED = os.getenv('MQTT_DISCOVERY_ENABLED') == "True"
+        if (os.getenv('MQTT_DISCOVERY_PREFIX') != None):
+            _MQTT_DISCOVERY_PREFIX = os.getenv('MQTT_DISCOVERY_PREFIX')
+        if (os.getenv('DEVICE_NAME') != None):
+            _DEVICE_NAME = os.getenv('DEVICE_NAME')
+        if (os.getenv('DEVICE_ID') != None):
+            _DEVICE_ID = os.getenv('DEVICE_ID')
     
 if __name__ == "__main__":
     init_config()        

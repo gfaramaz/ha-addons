@@ -20,6 +20,25 @@ from _config_ import _MQTT_pass
 from _config_ import _MQTT_port
 from _config_ import _MQTT_user
 
+# Discovery imports
+try:
+    from _config_ import _MQTT_DISCOVERY_ENABLED, _MQTT_DISCOVERY_PREFIX, _DEVICE_NAME, _DEVICE_ID
+    discovery_available = True
+except ImportError:
+    # Backward compatibility - discovery config not available
+    _MQTT_DISCOVERY_ENABLED = False
+    _MQTT_DISCOVERY_PREFIX = 'homeassistant'
+    _DEVICE_NAME = 'MCZ Maestro Stove'
+    _DEVICE_ID = 'mcz_maestro_stove'
+    discovery_available = True
+
+if discovery_available:
+    try:
+        from discovery import DiscoveryManager
+    except ImportError:
+        logger.warning("Discovery module not available")
+        discovery_available = False
+
 try:
     import thread
 except ImportError:
@@ -84,6 +103,11 @@ def on_connect_mqtt(client, userdata, flags, rc):
     logger.info("Connected to MQTT broker with code: " + str(rc))
     # Resubscribe to the MQTT topic on reconnection
     client.subscribe(_MQTT_TOPIC_SUB, qos=1)
+    
+    # Initialize and publish discovery configs
+    global discovery_manager
+    if discovery_available and discovery_manager:
+        discovery_manager.publish_discovery_configs()
 
 def on_disconnect_mqtt(client, userdata, rc):
     if rc != 0:
@@ -110,6 +134,12 @@ def secTOdhms(nb_sec):
 def connect():
     logger.info("Connected")
     logger.info("SID is : {}".format(sio.sid))
+    
+    # Publish availability online for discovery
+    global discovery_manager
+    if discovery_available and discovery_manager:
+        discovery_manager.publish_availability_online()
+    
     sio.emit(
         "join",
         {
@@ -141,6 +171,11 @@ def connect():
 @sio.event
 def disconnect():
     logger.error("Disconnected")
+    
+    # Publish availability offline for discovery
+    global discovery_manager
+    if discovery_available and discovery_manager:
+        discovery_manager.publish_availability_offline()
 
 
 
@@ -225,6 +260,7 @@ _INTERVALLE = 1
 _TEMPS_SESSION = 60
 
 MQTT_MAESTRO = {}
+discovery_manager = None
 
 logger.info('Lancement du deamon')
 logger.info('Anthony L. 2019')
@@ -242,5 +278,18 @@ client.on_message = on_message_mqtt
 client.on_disconnect = on_disconnect_mqtt
 client.connect(_MQTT_ip, _MQTT_port)
 client.loop_start()
+
+# Initialize discovery manager
+if discovery_available:
+    discovery_config = {
+        '_MQTT_DISCOVERY_ENABLED': _MQTT_DISCOVERY_ENABLED,
+        '_MQTT_DISCOVERY_PREFIX': _MQTT_DISCOVERY_PREFIX,
+        '_DEVICE_NAME': _DEVICE_NAME,
+        '_DEVICE_ID': _DEVICE_ID,
+        '_MQTT_TOPIC_PUB': _MQTT_TOPIC_PUB,
+        '_MQTT_TOPIC_SUB': _MQTT_TOPIC_SUB,
+        '_VERSION': '1.5'
+    }
+    discovery_manager = DiscoveryManager(client, discovery_config)
 
 thread.start_new_thread(receive, ())

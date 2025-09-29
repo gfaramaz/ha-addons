@@ -1,6 +1,6 @@
 {
   "name": "Maestro Gateway",
-  "version": "2.10",
+  "version": "2.11",
   "slug": "maestro_gateway",
   "description": "MQTT Gateway to MCZ Maestro stoves' api",
   "url": "https://github.com/SebLz/ha-addons/tree/main/maestro_gateway",
@@ -24,7 +24,11 @@
     "MCZ_device_serial": "xxxxxxxxxxxxx",
     "MCZ_device_MAC": "xxxxxxxxxxxx",
     "MCZ_App_URL": "http://app.mcz.it:9000",
-    "Cloud_Locale": "fr"
+    "Cloud_Locale": "fr",
+    "MQTT_DISCOVERY_ENABLED": false,
+    "MQTT_DISCOVERY_PREFIX": "homeassistant",
+    "DEVICE_NAME": "MCZ Maestro Stove",
+    "DEVICE_ID": "mcz_maestro_stove"
   },
   "schema": {
     "USE_MCZ_CLOUD": "bool",
@@ -43,6 +47,10 @@
     "MCZ_device_serial": "str",
     "MCZ_device_MAC": "str",
     "MCZ_App_URL": "str",
-    "Cloud_Locale": "str"
+    "Cloud_Locale": "str",
+    "MQTT_DISCOVERY_ENABLED": "bool",
+    "MQTT_DISCOVERY_PREFIX": "str",
+    "DEVICE_NAME": "str",
+    "DEVICE_ID": "str"
   }
 }
