@@ -47,9 +47,9 @@
     "MCZ_device_MAC": "str",
     "MCZ_App_URL": "str",
     "Cloud_Locale": "str",
-    "MQTT_DISCOVERY_ENABLED": "bool",
-    "MQTT_DISCOVERY_PREFIX": "str",
-    "DEVICE_NAME": "str",
-    "DEVICE_ID": "str"
+    "MQTT_DISCOVERY_ENABLED": "bool?",
+    "MQTT_DISCOVERY_PREFIX": "str?",
+    "DEVICE_NAME": "str?",
+    "DEVICE_ID": "str?"
   }
 }
