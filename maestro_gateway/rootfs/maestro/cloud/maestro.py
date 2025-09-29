@@ -295,8 +295,12 @@ def rispondo(response):
         json.dumps(MQTT_MAESTRO)))
     client.publish(_MQTT_TOPIC_PUB, json.dumps(MQTT_MAESTRO), 1)
     
-    # Also publish individual topics for discovery entities
+    # Also publish individual topics for discovery entities  
     publish_individual_discovery_topics(MQTT_MAESTRO)
+    
+    # Ensure availability is online when publishing data
+    if discovery_available and discovery_manager:
+        discovery_manager.publish_availability_online()
 
 
 def receive(*args):
