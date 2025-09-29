@@ -138,6 +138,87 @@ def secTOdhms(nb_sec):
     return "%d:%d:%d:%d" % (d, h, m, s)
 
 
+def publish_individual_discovery_topics(mqtt_data):
+    """Map French cloud data to English discovery topic names and publish individually"""
+    if not discovery_available or not discovery_manager or not discovery_manager.discovery_enabled:
+        return
+    
+    # Mapping from French cloud names to English discovery entity keys
+    french_to_english_mapping = {
+        "Temperature ambiante": "Ambient_Temperature",
+        "Temperature des fumees": "Fume_Temperature", 
+        "Puffer Temperature": "Puffer_Temperature",
+        "Temperature chaudiere": "Boiler_Temperature",
+        "Temperature NTC3": "NTC3_Temperature",
+        "TEMP - Carte mere": "Temperature_Motherboard",
+        "Temperature retour": "Return_Temperature",
+        "Etat du poele": "Stove_State", 
+        "Etat du ventilateur ambiance": "Fan_State",
+        "Etat du ventilateur canalise 1": "DuctedFan1",
+        "Etat du ventilateur canalise 2": "DuctedFan2",
+        "RPM - Ventilateur fummees": "RPM_Fam_Fume",
+        "RPM - Vis sans fin - SET": "RPM_WormWheel_Set",
+        "RPM - Vis sans fin - LIVE": "RPM_WormWheel_Live",
+        "Etat de la bougie": "Candle_Condition",
+        "Brazero": "Brazier",
+        "3WayValve": "3WayValve",  # This might not exist in cloud data
+        "Pump_PWM": "Pump_PWM",    # This might not exist in cloud data
+        "Heures de fonctionnement total (s)": "Total_Operating_Hours",
+        "Heures avant entretien": "Hours_To_Service",
+        "Nombre d'allumages": "Number_Of_Ignitions",
+        "Sonde Pellets": "Pellet_Sensor",
+        # Power/mode states - need to convert to 1/0
+        "Etat du mode Active": "Power",  # On/Off -> 1/0
+        "Mode ECO": "Eco_Mode",          # On/Off -> 1/0 
+        "Silence": "Silent_Mode",        # On/Off -> 1/0
+        "Mode Chronotermostato": "Chronostat", # On/Off -> 1/0
+        "Etat effets sonores": "Sound_Effects", # On/Off -> 1/0
+        "Antigel": "AntiFreeze",         # On/Off -> 1/0
+        "TEMP - Consigne": "Temperature_Setpoint",
+        "TEMP - Boiler": "Boiler_Setpoint",
+    }
+    
+    base_topic = _MQTT_TOPIC_PUB.rstrip('/')
+    
+    for french_name, english_key in french_to_english_mapping.items():
+        if french_name in mqtt_data:
+            value = mqtt_data[french_name]
+            
+            # Convert boolean-like values to 1/0
+            if english_key in ["Power", "Eco_Mode", "Silent_Mode", "Chronostat", "Sound_Effects", "AntiFreeze"]:
+                if isinstance(value, str):
+                    value = 1 if value.lower() in ['on', 'oui', 'yes', 'true'] else 0
+            
+            # Handle special formatting
+            elif english_key == "Stove_State" and isinstance(value, str):
+                # Keep as string but could map to numbers later
+                pass
+            
+            # Publish to individual topic
+            topic = f"{base_topic}/{english_key}"
+            try:
+                client.publish(topic, str(value), 1)
+                logger.debug(f"Published {english_key}: {value} to {topic}")
+            except Exception as e:
+                logger.error(f"Failed to publish {english_key}: {e}")
+    
+    # Handle special case for Power_Level from "Puissance Active"
+    if "Puissance Active" in mqtt_data:
+        value = mqtt_data["Puissance Active"]
+        if isinstance(value, str) and "Puissance" in value:
+            import re
+            match = re.search(r'Puissance (\d+)', value)
+            if match:
+                power_level = int(match.group(1))
+                # Publish to both sensor and control topics
+                try:
+                    client.publish(f"{base_topic}/Power_Level", str(power_level), 1)
+                    client.publish(f"{base_topic}/Power_Level_Control", str(power_level), 1)
+                    logger.debug(f"Published Power_Level: {power_level}")
+                except Exception as e:
+                    logger.error(f"Failed to publish Power_Level: {e}")
+
+
 @sio.event
 def connect():
     logger.info("Connected")
@@ -213,6 +294,9 @@ def rispondo(response):
     logger.info('Publication sur le topic MQTT ' + str(_MQTT_TOPIC_PUB) + ' le message suivant : ' + str(
         json.dumps(MQTT_MAESTRO)))
     client.publish(_MQTT_TOPIC_PUB, json.dumps(MQTT_MAESTRO), 1)
+    
+    # Also publish individual topics for discovery entities
+    publish_individual_discovery_topics(MQTT_MAESTRO)
 
 
 def receive(*args):
