@@ -51,9 +51,12 @@ except ImportError:
 
 if discovery_available:
     try:
+        import sys
+        import os
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
         from discovery import DiscoveryManager
     except ImportError:
-        logger.warning("Discovery module not available")
+        print("Discovery module not available")  # Use print instead of logger which may not be set up yet
         discovery_available = False
 
 from commands import MaestroCommand, get_maestro_command, maestrocommandvalue_to_websocket_string, MaestroCommandValue, MAESTRO_COMMANDS

@@ -20,7 +20,26 @@ from _config_ import _MQTT_pass
 from _config_ import _MQTT_port
 from _config_ import _MQTT_user
 
-# Discovery imports
+try:
+    import thread
+except ImportError:
+    import _thread as thread
+
+# Initialize logger first
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s :%(name)s :: %(levelname)s :: %(message)s')
+file_handler = TimedRotatingFileHandler('maestro.log', when='D', interval=1, backupCount=5)
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
+# Discovery imports after logger is set up
 try:
     from _config_ import _MQTT_DISCOVERY_ENABLED, _MQTT_DISCOVERY_PREFIX, _DEVICE_NAME, _DEVICE_ID
     discovery_available = True
@@ -34,28 +53,13 @@ except ImportError:
 
 if discovery_available:
     try:
+        import sys
+        import os
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
         from discovery import DiscoveryManager
     except ImportError:
         logger.warning("Discovery module not available")
         discovery_available = False
-
-try:
-    import thread
-except ImportError:
-    import _thread as thread
-
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s :%(name)s :: %(levelname)s :: %(message)s')
-file_handler = TimedRotatingFileHandler('maestro.log', when='D', interval=1, backupCount=5)
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
-
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.DEBUG)
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
 
 sio = socketio.Client(logger=True, engineio_logger=True)
 
