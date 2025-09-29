@@ -105,10 +105,14 @@ class PileFifo(object):
 
 def on_connect_mqtt(client, userdata, flags, rc):
     logger.info("Connected to MQTT broker with code: " + str(rc))
+    if rc != 0:
+        logger.error(f"MQTT connection failed with code {rc}. Discovery will not work.")
+        return
+    
     # Resubscribe to the MQTT topic on reconnection
     client.subscribe(_MQTT_TOPIC_SUB, qos=1)
     
-    # Initialize and publish discovery configs
+    # Initialize and publish discovery configs only if connection successful
     global discovery_manager
     if discovery_available and discovery_manager:
         discovery_manager.publish_discovery_configs()
@@ -274,9 +278,13 @@ logger.info('Niveau de LOG : DEBUG')
 sio.connect(_MCZ_App_URL)
 
 logger.info('Connection en cours au broker MQTT (IP:' + _MQTT_ip + ' PORT:' + str(_MQTT_port) + ')')
+logger.info(f'MQTT Authentication: {_MQTT_authentication}, User: "{_MQTT_user}", Pass: {"[HIDDEN]" if _MQTT_pass else "[EMPTY]"}')
 client = mqtt.Client()
 if _MQTT_authentication:
+    logger.info('Setting MQTT credentials...')
     client.username_pw_set(username=_MQTT_user, password=_MQTT_pass)
+else:
+    logger.info('MQTT authentication disabled, connecting without credentials')
 client.on_connect = on_connect_mqtt
 client.on_message = on_message_mqtt
 client.on_disconnect = on_disconnect_mqtt
