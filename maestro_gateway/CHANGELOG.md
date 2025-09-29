@@ -23,15 +23,15 @@
 
 ## 2.9
 
-- Update to chibald's latest version (preserving REFRESH_INTERVAL param)) (thanks @20bart - cf. https://github.com/SebLz/ha-addons/pull/65)
+- Update to chibald's latest version (preserving REFRESH_INTERVAL param)) (thanks @20bart - cf. https://github.com/gfaramaz/ha-addons/pull/65)
 
 ## 2.8
 
-- Implement GPT-4 translations for the cloud script (addressing https://github.com/SebLz/ha-addons/issues/55). Locale can be set using the Cloud_Locale option. Currently supported: nl, fr, en, de, es, it.
+- Implement GPT-4 translations for the cloud script (addressing https://github.com/gfaramaz/ha-addons/issues/55). Locale can be set using the Cloud_Locale option. Currently supported: nl, fr, en, de, es, it.
 
 ## 2.7
 
-- Ensures that the client automatically tries to resubscribe to the MQTT topic whenever it reconnects after an unexpected disconnection (addressing https://github.com/SebLz/ha-addons/issues/53)
+- Ensures that the client automatically tries to resubscribe to the MQTT topic whenever it reconnects after an unexpected disconnection (addressing https://github.com/gfaramaz/ha-addons/issues/53)
 - Update HA dependencies
 
 ## 2.6.1
@@ -44,7 +44,7 @@
 
 ## 2.5
 
-- Update python packages to fix connection errors (cf. https://github.com/pipolaq/maestro/issues/5 & https://github.com/SebLz/ha-addons/issues/37)
+- Update python packages to fix connection errors (cf. https://github.com/pipolaq/maestro/issues/5 & https://github.com/gfaramaz/ha-addons/issues/37)
 
 ## 2.4
 

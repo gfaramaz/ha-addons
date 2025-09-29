@@ -7,7 +7,7 @@ After installing the addon, the pellet [state and commands](https://github.com/C
 This addon  embeds the code from https://github.com/Chibald/maestrogateway (local connection) and https://github.com/pipolaq/maestro (cloud connection) in a Home Assistant container.
 
 # Installation
-You can install this addon after adding my repository url (https://github.com/SebLz/ha-addons) in your HA instance (you can follow [the official guide](https://www.home-assistant.io/common-tasks/os#installing-third-party-add-ons). If you want to connect locally to the stove, make sure it is reachable from the device on which HA is running. To do this, you'll typically need to use a wifi dongle on your HA device to connect to the stove AP or setup a second (client) wifi interface on your router (can be done easily if you use OpenWRT for instance).
+You can install this addon after adding my repository url (https://github.com/gfaramaz/ha-addons) in your HA instance (you can follow [the official guide](https://www.home-assistant.io/common-tasks/os#installing-third-party-add-ons). If you want to connect locally to the stove, make sure it is reachable from the device on which HA is running. To do this, you'll typically need to use a wifi dongle on your HA device to connect to the stove AP or setup a second (client) wifi interface on your router (can be done easily if you use OpenWRT for instance).
 
 # Configuration
 Available options enable user to set up [Chibald' maestrogateway config](https://github.com/Chibald/maestrogateway#configuration)
@@ -114,7 +114,7 @@ Examples of code you can use in you configuration.yaml assuming you have the add
   json_attributes_topic: "Maestro/State"
 ```
 
-All possible commands are descibed in the [commands.py](https://github.com/SebLz/ha-addons/blob/main/maestro_gateway/rootfs/maestro/local/commands.py) file. Here is an example below for turning On/Off the stove with a [MQTT Switch](https://www.home-assistant.io/integrations/switch.mqtt/) (command id: 34, type 'onoff40' meaning on = '1', off = '40'):
+All possible commands are descibed in the [commands.py](https://github.com/gfaramaz/ha-addons/blob/main/maestro_gateway/rootfs/maestro/local/commands.py) file. Here is an example below for turning On/Off the stove with a [MQTT Switch](https://www.home-assistant.io/integrations/switch.mqtt/) (command id: 34, type 'onoff40' meaning on = '1', off = '40'):
 ```
 - platform: mqtt
   name: Maestro
@@ -132,8 +132,13 @@ All possible commands are descibed in the [commands.py](https://github.com/SebLz
   payload_off: "34,40"
 ```
 
+# MQTT Discovery Support
+✅ **NEW in v2.11**: This addon now supports [MQTT Discovery](https://www.home-assistant.io/docs/mqtt/discovery/)! 
+
+Simply set `MQTT_DISCOVERY_ENABLED: true` in your addon configuration and your MCZ Maestro stove will automatically appear in Home Assistant with all sensors, switches, and controls. No manual YAML configuration needed!
+
 # Improvements
-There are many areas of improvements, like support of [MQTT discovery](https://www.home-assistant.io/docs/mqtt/discovery/), better docs and type checking for options, merging both python scripts into one and use the same mqtt format... My time and expertise are limited but hopefully this is already helpful to some people and can be further improved by others :).
+There are still many areas for improvements, like better docs and type checking for options, merging both python scripts into one and use the same mqtt format... My time and expertise are limited but hopefully this is already helpful to some people and can be further improved by others :).
 
 # Credits
 All credits go to Anthony-55 who created the original Python script but also to Chibald and Pipolaq who adapted it in 2 different versions that I'm embedding in this Home Assistant addon.
