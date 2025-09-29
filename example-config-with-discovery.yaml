@@ -1,0 +1,29 @@
+# Example Configuration for Maestro Gateway with MQTT Discovery
+# Copy these settings to your Home Assistant addon configuration
+
+USE_MCZ_CLOUD: true  # or false for local connection
+MQTT_ip: "core-mosquitto"  # or your MQTT broker IP
+MQTT_port: "1883"
+MQTT_authentication: "False"  # or "True" if you use MQTT auth
+MQTT_user: ""  # your MQTT username if authentication enabled
+MQTT_pass: ""  # your MQTT password if authentication enabled
+MQTT_TOPIC_SUB: "Maestro/Command"
+MQTT_TOPIC_PUB: "Maestro/State"
+MQTT_PAYLOAD_TYPE: "TOPIC"
+
+# 🆕 NEW DISCOVERY SETTINGS:
+MQTT_DISCOVERY_ENABLED: true  # ← Enable this!
+MQTT_DISCOVERY_PREFIX: "homeassistant"  # Default HA discovery prefix
+DEVICE_NAME: "MCZ Maestro Stove"  # How it appears in HA
+DEVICE_ID: "mcz_maestro_stove"  # Unique ID
+
+# Your stove settings:
+MCZip: "192.168.120.1"  # Replace with your stove IP
+MCZport: "81"
+MCZ_device_serial: "your_serial_here"  # Replace with actual serial
+MCZ_device_MAC: "your_mac_here"  # Replace with actual MAC
+MCZ_App_URL: "http://app.mcz.it:9000"
+Cloud_Locale: "en"  # or "fr", "it", etc.
+
+WS_RECONNECTS_BEFORE_ALERT: "5"
+REFRESH_INTERVAL: "15.0"
