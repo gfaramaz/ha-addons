@@ -30,7 +30,7 @@ get_bool_config_with_default() {
 echo "
 _MQTT_ip = '$(bashio::config 'MQTT_ip')'
 _MQTT_port = $(bashio::config 'MQTT_port')
-_MQTT_authentication = $(bashio::config.true 'MQTT_authentication' && echo 'True' || echo 'False')
+_MQTT_authentication = $(get_bool_config_with_default 'MQTT_authentication' 'False')
 _MQTT_user = '$(bashio::config 'MQTT_user')'
 _MQTT_pass = '$(bashio::config 'MQTT_pass')'
 _MQTT_TOPIC_SUB = '$(bashio::config 'MQTT_TOPIC_SUB')'
@@ -51,7 +51,7 @@ _VERSION = '1.03'
 echo "
 _MQTT_ip = '$(bashio::config 'MQTT_ip')'
 _MQTT_port = $(bashio::config 'MQTT_port')
-_MQTT_authentication = $(bashio::config.true 'MQTT_authentication' && echo 'True' || echo 'False')
+_MQTT_authentication = $(get_bool_config_with_default 'MQTT_authentication' 'False')
 _MQTT_user = '$(bashio::config 'MQTT_user')'
 _MQTT_pass = '$(bashio::config 'MQTT_pass')'
 _MQTT_TOPIC_SUB = '$(bashio::config 'MQTT_TOPIC_SUB')'
