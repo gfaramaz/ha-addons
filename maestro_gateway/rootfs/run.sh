@@ -1,19 +1,45 @@
 #!/usr/bin/with-contenv bashio
 
+# Helper function to get config with default value
+get_config_with_default() {
+    local key="$1"
+    local default="$2"
+    if bashio::config.exists "$key"; then
+        bashio::config "$key"
+    else
+        echo "$default"
+    fi
+}
+
+# Helper function to get boolean config with default
+get_bool_config_with_default() {
+    local key="$1"
+    local default="$2"
+    if bashio::config.exists "$key"; then
+        if bashio::config.true "$key"; then
+            echo "True"
+        else
+            echo "False"
+        fi
+    else
+        echo "$default"
+    fi
+}
+
 # Generate config file for local connection plugin
 echo "
 _MQTT_ip = '$(bashio::config 'MQTT_ip')'
 _MQTT_port = $(bashio::config 'MQTT_port')
-_MQTT_authentication = $(bashio::config 'MQTT_authentication')
+_MQTT_authentication = $(bashio::config.true 'MQTT_authentication' && echo 'True' || echo 'False')
 _MQTT_user = '$(bashio::config 'MQTT_user')'
 _MQTT_pass = '$(bashio::config 'MQTT_pass')'
 _MQTT_TOPIC_SUB = '$(bashio::config 'MQTT_TOPIC_SUB')'
 _MQTT_TOPIC_PUB = '$(bashio::config 'MQTT_TOPIC_PUB')'
 _MQTT_PAYLOAD_TYPE = '$(bashio::config 'MQTT_PAYLOAD_TYPE')'
-_MQTT_DISCOVERY_ENABLED = $(bashio::config 'MQTT_DISCOVERY_ENABLED')
-_MQTT_DISCOVERY_PREFIX = '$(bashio::config 'MQTT_DISCOVERY_PREFIX')'
-_DEVICE_NAME = '$(bashio::config 'DEVICE_NAME')'
-_DEVICE_ID = '$(bashio::config 'DEVICE_ID')'
+_MQTT_DISCOVERY_ENABLED = $(get_bool_config_with_default 'MQTT_DISCOVERY_ENABLED' 'False')
+_MQTT_DISCOVERY_PREFIX = '$(get_config_with_default 'MQTT_DISCOVERY_PREFIX' 'homeassistant')'
+_DEVICE_NAME = '$(get_config_with_default 'DEVICE_NAME' 'MCZ Maestro Stove')'
+_DEVICE_ID = '$(get_config_with_default 'DEVICE_ID' 'mcz_maestro_stove')'
 _WS_RECONNECTS_BEFORE_ALERT = $(bashio::config 'WS_RECONNECTS_BEFORE_ALERT')
 _REFRESH_INTERVAL = $(bashio::config 'REFRESH_INTERVAL')
 _MCZip = '$(bashio::config 'MCZip')'
@@ -25,16 +51,16 @@ _VERSION = '1.03'
 echo "
 _MQTT_ip = '$(bashio::config 'MQTT_ip')'
 _MQTT_port = $(bashio::config 'MQTT_port')
-_MQTT_authentication = $(bashio::config 'MQTT_authentication')
+_MQTT_authentication = $(bashio::config.true 'MQTT_authentication' && echo 'True' || echo 'False')
 _MQTT_user = '$(bashio::config 'MQTT_user')'
 _MQTT_pass = '$(bashio::config 'MQTT_pass')'
 _MQTT_TOPIC_SUB = '$(bashio::config 'MQTT_TOPIC_SUB')'
 _MQTT_TOPIC_PUB = '$(bashio::config 'MQTT_TOPIC_PUB')'
 _MQTT_PAYLOAD_TYPE = '$(bashio::config 'MQTT_PAYLOAD_TYPE')'
-_MQTT_DISCOVERY_ENABLED = $(bashio::config 'MQTT_DISCOVERY_ENABLED')
-_MQTT_DISCOVERY_PREFIX = '$(bashio::config 'MQTT_DISCOVERY_PREFIX')'
-_DEVICE_NAME = '$(bashio::config 'DEVICE_NAME')'
-_DEVICE_ID = '$(bashio::config 'DEVICE_ID')'
+_MQTT_DISCOVERY_ENABLED = $(get_bool_config_with_default 'MQTT_DISCOVERY_ENABLED' 'False')
+_MQTT_DISCOVERY_PREFIX = '$(get_config_with_default 'MQTT_DISCOVERY_PREFIX' 'homeassistant')'
+_DEVICE_NAME = '$(get_config_with_default 'DEVICE_NAME' 'MCZ Maestro Stove')'
+_DEVICE_ID = '$(get_config_with_default 'DEVICE_ID' 'mcz_maestro_stove')'
 _WS_RECONNECTS_BEFORE_ALERT = $(bashio::config 'WS_RECONNECTS_BEFORE_ALERT')
 _MCZip = '$(bashio::config 'MCZip')'
 _MCZport = '$(bashio::config 'MCZport')'
