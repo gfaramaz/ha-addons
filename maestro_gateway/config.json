@@ -6,7 +6,6 @@
   "url": "https://github.com/gfaramaz/ha-addons/tree/main/maestro_gateway",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
   "init": false,
-  "image": "ghcr.io/gfaramaz/{arch}-addon-maestro_gateway",
   "options": {
     "USE_MCZ_CLOUD": true,
     "MQTT_ip": "core-mosquitto",
