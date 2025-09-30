@@ -14,6 +14,7 @@ from _config_ import _MCZ_device_serial
 from _config_ import _MQTT_TOPIC_PUB
 from _config_ import _MQTT_TOPIC_SUB
 from _config_ import _MQTT_authentication
+from _config_ import _MQTT_PAYLOAD_TYPE
 # MQTT
 from _config_ import _MQTT_ip
 from _config_ import _MQTT_pass
@@ -55,10 +56,15 @@ if discovery_available:
     try:
         import sys
         import os
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
+        # Add parent dir for discovery and local commands
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.append(base_dir + '/../')
+        sys.path.append(base_dir + '/../local')
         from discovery import DiscoveryManager
+        # Import command helpers from local implementation to map names to IDs
+        from commands import get_maestro_command, MaestroCommandValue, maestrocommandvalue_to_websocket_string
     except ImportError:
-        logger.warning("Discovery module not available")
+        logger.warning("Discovery/commands module not available")
         discovery_available = False
 
 sio = socketio.Client(logger=True, engineio_logger=True)
@@ -109,8 +115,13 @@ def on_connect_mqtt(client, userdata, flags, rc):
         logger.error(f"MQTT connection failed with code {rc}. Discovery will not work.")
         return
     
-    # Resubscribe to the MQTT topic on reconnection
-    client.subscribe(_MQTT_TOPIC_SUB, qos=1)
+    # Subscribe according to payload type
+    if _MQTT_PAYLOAD_TYPE == 'TOPIC':
+        sub = _MQTT_TOPIC_SUB + '#'
+    else:
+        sub = _MQTT_TOPIC_SUB
+    logger.info(f"Subscribing to MQTT topic: {sub}")
+    client.subscribe(sub, qos=1)
     
     # Initialize and publish discovery configs only if connection successful
     global discovery_manager
@@ -122,13 +133,40 @@ def on_disconnect_mqtt(client, userdata, rc):
         logger.warning("Unexpected MQTT disconnection. Will auto-reconnect")
 
 def on_message_mqtt(client, userdata, message):
-    logger.info('Message MQTT reçu : ' + str(message.payload.decode()))
-    cmd = message.payload.decode().split(",")
-    if cmd[0] == "42":
-        cmd[1] = int(float(cmd[1]) * 2)
-    Message_MQTT.empile("C|WriteParametri|" + cmd[0] + "|" + str(cmd[1]))
-    logger.info('Contenu Pile Message_MQTT : ' + str(Message_MQTT.copiepile()))
-    send()
+    try:
+        payload = message.payload.decode()
+        topic = str(message.topic)
+        logger.info(f'MQTT: received on {topic}: {payload}')
+        
+        if _MQTT_PAYLOAD_TYPE == 'TOPIC':
+            # Extract command name from topic suffix
+            command_name = topic[topic.rindex('/')+1:]
+            if 'get_maestro_command' in globals():
+                maestrocommand = get_maestro_command(command_name)
+                # Build websocket command string using local helper
+                mc = MaestroCommandValue(maestrocommand, payload)
+                ws_cmd = maestrocommandvalue_to_websocket_string(mc)
+                if ws_cmd:
+                    Message_MQTT.empile(ws_cmd)
+                    logger.info(f"Enqueue command from topic: {ws_cmd}")
+                    send()
+                else:
+                    logger.warning(f"Invalid command payload for {command_name}: {payload}")
+            else:
+                logger.warning("Command helpers not available; cannot process TOPIC payloads")
+        else:
+            # Expect legacy "id,value" format
+            parts = payload.split(",")
+            if len(parts) >= 2:
+                if parts[0] == "42":
+                    parts[1] = int(float(parts[1]) * 2)
+                Message_MQTT.empile("C|WriteParametri|" + parts[0] + "|" + str(parts[1]))
+                logger.info('Contenu Pile Message_MQTT : ' + str(Message_MQTT.copiepile()))
+                send()
+            else:
+                logger.warning(f"Invalid legacy payload: {payload}")
+    except Exception as e:
+        logger.error(f"Exception in on_message_mqtt: {e}")
 
 
 def secTOdhms(nb_sec):
