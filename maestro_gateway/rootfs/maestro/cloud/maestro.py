@@ -142,6 +142,25 @@ def on_message_mqtt(client, userdata, message):
             # Extract command name from topic suffix
             command_name = topic[topic.rindex('/')+1:]
             if 'get_maestro_command' in globals():
+                # Check debouncing for this command
+                current_time = time.time()
+                
+                # For temperature setpoints, debounce by command name only (so rapid changes get consolidated)
+                # For switches, debounce by command+value (so on/off can alternate)
+                if command_name in ['Temperature_Setpoint', 'Boiler_Setpoint', 'Power_Level']:
+                    command_key = command_name  # Allow consolidation of rapid value changes
+                else:
+                    command_key = f"{command_name}_{payload}"  # Separate debouncing per value
+                
+                if command_key in last_command_time:
+                    time_since_last = current_time - last_command_time[command_key]
+                    if time_since_last < COMMAND_DEBOUNCE_SECONDS:
+                        logger.debug(f"Debouncing {command_name}: {time_since_last:.1f}s < {COMMAND_DEBOUNCE_SECONDS}s, skipping")
+                        return
+                
+                # Update last command time
+                last_command_time[command_key] = current_time
+                
                 maestrocommand = get_maestro_command(command_name)
                 # Build websocket command string using local helper
                 mc = MaestroCommandValue(maestrocommand, payload)
@@ -395,6 +414,10 @@ _TEMPS_SESSION = 60
 
 MQTT_MAESTRO = {}
 discovery_manager = None
+
+# Command debouncing to prevent rapid-fire commands
+last_command_time = {}
+COMMAND_DEBOUNCE_SECONDS = 3  # Wait 3 seconds between same commands
 
 logger.info('Lancement du deamon')
 logger.info('Anthony L. 2019')
