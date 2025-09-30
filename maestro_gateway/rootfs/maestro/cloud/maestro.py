@@ -149,17 +149,27 @@ def on_message_mqtt(client, userdata, message):
                 # For switches, debounce by command+value (so on/off can alternate)
                 if command_name in ['Temperature_Setpoint', 'Boiler_Setpoint', 'Power_Level']:
                     command_key = command_name  # Allow consolidation of rapid value changes
+                    logger.info(f"DEBOUNCE: Using command key '{command_key}' for temperature/power command")
                 else:
                     command_key = f"{command_name}_{payload}"  # Separate debouncing per value
+                    logger.info(f"DEBOUNCE: Using command key '{command_key}' for switch command")
+                
+                logger.info(f"DEBOUNCE: Current command_key='{command_key}', last_times keys: {list(last_command_time.keys())}")
                 
                 if command_key in last_command_time:
                     time_since_last = current_time - last_command_time[command_key]
+                    logger.info(f"DEBOUNCE: Time since last {command_key}: {time_since_last:.1f}s (threshold: {COMMAND_DEBOUNCE_SECONDS}s)")
                     if time_since_last < COMMAND_DEBOUNCE_SECONDS:
-                        logger.debug(f"Debouncing {command_name}: {time_since_last:.1f}s < {COMMAND_DEBOUNCE_SECONDS}s, skipping")
+                        logger.info(f"DEBOUNCE: BLOCKING command {command_name}: {time_since_last:.1f}s < {COMMAND_DEBOUNCE_SECONDS}s")
                         return
+                    else:
+                        logger.info(f"DEBOUNCE: ALLOWING command {command_name}: {time_since_last:.1f}s >= {COMMAND_DEBOUNCE_SECONDS}s")
+                else:
+                    logger.info(f"DEBOUNCE: First time seeing command key '{command_key}' - allowing")
                 
                 # Update last command time
                 last_command_time[command_key] = current_time
+                logger.info(f"DEBOUNCE: Updated last_command_time['{command_key}'] = {current_time}")
                 
                 maestrocommand = get_maestro_command(command_name)
                 # Build websocket command string using local helper
