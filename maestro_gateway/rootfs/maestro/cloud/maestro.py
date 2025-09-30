@@ -117,7 +117,7 @@ def on_connect_mqtt(client, userdata, flags, rc):
     
     # Subscribe according to payload type
     if _MQTT_PAYLOAD_TYPE == 'TOPIC':
-        sub = _MQTT_TOPIC_SUB + '#'
+        sub = _MQTT_TOPIC_SUB + '/#'
     else:
         sub = _MQTT_TOPIC_SUB
     logger.info(f"Subscribing to MQTT topic: {sub}")
